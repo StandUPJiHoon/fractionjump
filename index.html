@@ -1,0 +1,1322 @@
+<!doctype html>
+<html lang="ko">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>토끼 분수 덧셈 점프 게임</title>
+  <script src="/_sdk/element_sdk.js"></script>
+  <style>
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Press Start 2P', 'Noto Sans KR', Arial, sans-serif;
+      background: linear-gradient(180deg, #5C94FC 0%, #5C94FC 65%, #90C860 65%, #68A040 100%);
+      overflow-x: hidden;
+    }
+
+    html, body {
+      height: 100%;
+      width: 100%;
+    }
+
+    .app-container {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .clouds {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 65%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .cloud {
+      position: absolute;
+      background: white;
+      border-radius: 100px;
+      opacity: 0.9;
+    }
+
+    .cloud::before,
+    .cloud::after {
+      content: '';
+      position: absolute;
+      background: white;
+      border-radius: 100px;
+    }
+
+    .cloud1 {
+      width: 80px;
+      height: 30px;
+      top: 15%;
+      left: 10%;
+      animation: float 20s infinite linear;
+    }
+
+    .cloud1::before {
+      width: 40px;
+      height: 40px;
+      top: -20px;
+      left: 10px;
+    }
+
+    .cloud1::after {
+      width: 50px;
+      height: 35px;
+      top: -15px;
+      right: 10px;
+    }
+
+    .cloud2 {
+      width: 100px;
+      height: 35px;
+      top: 30%;
+      left: 60%;
+      animation: float 25s infinite linear;
+      animation-delay: -5s;
+    }
+
+    .cloud2::before {
+      width: 50px;
+      height: 45px;
+      top: -22px;
+      left: 15px;
+    }
+
+    .cloud2::after {
+      width: 55px;
+      height: 40px;
+      top: -18px;
+      right: 15px;
+    }
+
+    .cloud3 {
+      width: 70px;
+      height: 28px;
+      top: 45%;
+      left: 80%;
+      animation: float 18s infinite linear;
+      animation-delay: -10s;
+    }
+
+    .cloud3::before {
+      width: 35px;
+      height: 35px;
+      top: -18px;
+      left: 8px;
+    }
+
+    .cloud3::after {
+      width: 40px;
+      height: 32px;
+      top: -15px;
+      right: 8px;
+    }
+
+    @keyframes float {
+      0% {
+        transform: translateX(0);
+      }
+      100% {
+        transform: translateX(-100vw);
+      }
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .game-title {
+      font-size: 32px;
+      font-weight: bold;
+      color: #FFD700;
+      margin: 0 0 15px 0;
+      text-shadow: 3px 3px 0px #8B4513, 6px 6px 0px rgba(0,0,0,0.3);
+      letter-spacing: 1px;
+    }
+
+    .difficulty-toggle-btn {
+      background: #FF6B6B;
+      color: white;
+      border: 3px solid #C92A2A;
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 700;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.1s;
+      box-shadow: 0 4px 0 rgba(0,0,0,0.3);
+      margin-bottom: 15px;
+    }
+
+    .difficulty-toggle-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 0 rgba(0,0,0,0.3);
+    }
+
+    .difficulty-toggle-btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 0 rgba(0,0,0,0.3);
+    }
+
+    .game-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding: 0 10px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .info-item {
+      font-size: 16px;
+      font-weight: 600;
+      color: white;
+      background: #E85D04;
+      padding: 10px 18px;
+      border-radius: 8px;
+      box-shadow: 0 4px 0 #9D4502, 0 6px 8px rgba(0,0,0,0.3);
+      border: 3px solid #FFAA33;
+    }
+
+    .problem-section {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 25px;
+      box-shadow: 0 6px 0 rgba(0,0,0,0.2), 0 8px 16px rgba(0,0,0,0.3);
+      text-align: center;
+      border: 4px solid #FFD700;
+      position: relative;
+      z-index: 1;
+    }
+
+    .problem-text {
+      font-size: 24px;
+      font-weight: bold;
+      color: #2D3748;
+      margin-bottom: 12px;
+      line-height: 1.6;
+    }
+
+    .fraction {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      vertical-align: middle;
+      margin: 0 4px;
+      font-size: 20px;
+    }
+
+    .fraction-numerator {
+      border-bottom: 2px solid #2D3748;
+      padding: 0 8px 2px 8px;
+      min-width: 20px;
+      text-align: center;
+    }
+
+    .fraction-denominator {
+      padding: 2px 8px 0 8px;
+      min-width: 20px;
+      text-align: center;
+    }
+
+    .instruction-text {
+      font-size: 14px;
+      color: #E85D04;
+      margin-top: 8px;
+      font-weight: 600;
+    }
+
+    .game-stage {
+      background: rgba(255, 255, 255, 0.5);
+      border-radius: 12px;
+      padding: 30px 20px 20px 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 6px 0 rgba(0,0,0,0.2), 0 8px 16px rgba(0,0,0,0.3);
+      position: relative;
+      border: 4px solid #8B4513;
+      z-index: 1;
+      overflow: visible;
+    }
+
+    .brick-pattern {
+      position: absolute;
+      bottom: -50px;
+      left: 0;
+      right: 0;
+      height: 40px;
+      background: repeating-linear-gradient(
+        90deg,
+        #C8694D 0px,
+        #C8694D 50px,
+        #8B4513 50px,
+        #8B4513 52px
+      );
+      border-top: 3px solid #8B4513;
+      z-index: 0;
+    }
+
+    .numberline {
+      position: relative;
+      height: 180px;
+      margin: 0 auto;
+      max-width: 700px;
+      padding-bottom: 20px;
+    }
+
+    .stage-instruction {
+      position: absolute;
+      top: -35px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 18px;
+      font-weight: bold;
+      color: #E85D04;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 8px 20px;
+      border-radius: 8px;
+      border: 3px solid #FFAA33;
+      box-shadow: 0 3px 0 rgba(0,0,0,0.2);
+      white-space: nowrap;
+      z-index: 10;
+    }
+
+    .control-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 30px;
+      padding-bottom: 10px;
+      position: relative;
+      z-index: 10;
+    }
+
+    .btn-backward {
+      background: #DC2626;
+      color: white;
+      border: 3px solid #7F1D1D;
+    }
+
+    .btn-backward:hover {
+      background: #B91C1C;
+    }
+
+    .btn-backward:active {
+      box-shadow: 0 2px 0 #7F1D1D;
+      transform: translateY(2px);
+    }
+
+    .btn-forward {
+      background: #7C3AED;
+      color: white;
+      border: 3px solid #4C1D95;
+    }
+
+    .btn-forward:hover {
+      background: #6D28D9;
+    }
+
+    .btn-forward:active {
+      box-shadow: 0 2px 0 #4C1D95;
+      transform: translateY(2px);
+    }
+
+    .ground-line {
+      position: absolute;
+      bottom: 20px;
+      left: 0;
+      right: 0;
+      height: 6px;
+      background: #8B4513;
+      border-radius: 3px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .tick {
+      position: absolute;
+      bottom: 10px;
+      width: 3px;
+      height: 50px;
+      background: #6B3410;
+    }
+
+    .tick-label {
+      position: absolute;
+      bottom: -20px;
+      font-size: 14px;
+      font-weight: 700;
+      color: #2D3748;
+      transform: translateX(-50%);
+      white-space: nowrap;
+      background: rgba(255, 255, 255, 0.8);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .target-marker {
+      position: absolute;
+      bottom: 70px;
+      font-size: 38px;
+      transform: translateX(-50%);
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+      animation: bounce 0.8s ease-in-out infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { 
+        transform: translateX(-50%) translateY(0) scale(1); 
+      }
+      50% { 
+        transform: translateX(-50%) translateY(-12px) scale(1.1); 
+      }
+    }
+
+    .rabbit {
+      position: absolute;
+      bottom: 20px;
+      font-size: 56px;
+      transform: translateX(-50%);
+      filter: drop-shadow(0 3px 6px rgba(0,0,0,0.4));
+      transition: left 0.3s ease-out;
+      z-index: 20;
+    }
+
+    .rabbit.jumping {
+      animation: marioJump 0.5s ease-in-out;
+    }
+
+    @keyframes marioJump {
+      0% { 
+        transform: translateX(-50%) translateY(0) rotate(0deg) scale(1);
+      }
+      25% {
+        transform: translateX(-50%) translateY(-60px) rotate(-5deg) scale(1.15);
+      }
+      50% {
+        transform: translateX(-50%) translateY(-90px) rotate(0deg) scale(1.2);
+      }
+      75% {
+        transform: translateX(-50%) translateY(-60px) rotate(5deg) scale(1.15);
+      }
+      100% { 
+        transform: translateX(-50%) translateY(0) rotate(0deg) scale(1);
+      }
+    }
+
+    .status-section {
+      text-align: center;
+      margin-bottom: 20px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .status-text {
+      font-size: 18px;
+      font-weight: 600;
+      color: white;
+      margin: 8px 0;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+      background: rgba(232, 93, 4, 0.8);
+      display: inline-block;
+      padding: 8px 16px;
+      border-radius: 8px;
+      margin: 4px 8px;
+    }
+
+    .button-container {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .game-button {
+      padding: 12px 24px;
+      font-size: 16px;
+      font-weight: 700;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.1s;
+      box-shadow: 0 4px 0 rgba(0,0,0,0.3);
+      text-transform: uppercase;
+    }
+
+    .game-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 0 rgba(0,0,0,0.3);
+    }
+
+    .game-button:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 0 rgba(0,0,0,0.3);
+    }
+
+    .btn-next {
+      background: #10B981;
+      color: white;
+      border: 3px solid #065F46;
+    }
+
+    .btn-next:hover {
+      background: #059669;
+    }
+
+    .btn-reset {
+      background: #F59E0B;
+      color: white;
+      border: 3px solid #92400E;
+    }
+
+    .btn-reset:hover {
+      background: #D97706;
+    }
+
+    .btn-retry {
+      background: #3B82F6;
+      color: white;
+      border: 3px solid #1E3A8A;
+    }
+
+    .btn-retry:hover {
+      background: #2563EB;
+    }
+
+    .answer-input-section {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 6px 0 rgba(0,0,0,0.2), 0 8px 16px rgba(0,0,0,0.3);
+      text-align: center;
+      border: 4px solid #10B981;
+      position: relative;
+      z-index: 1;
+      display: none;
+    }
+
+    .answer-input-section.show {
+      display: block;
+    }
+
+    .answer-label {
+      font-size: 20px;
+      font-weight: bold;
+      color: #2D3748;
+      margin-bottom: 15px;
+    }
+
+    .fraction-input-container {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .mixed-fraction-container {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .fraction-input {
+      width: 80px;
+      height: 50px;
+      font-size: 24px;
+      font-weight: bold;
+      text-align: center;
+      border: 3px solid #10B981;
+      border-radius: 8px;
+      padding: 8px;
+      background: white;
+      font-family: 'Press Start 2P', 'Noto Sans KR', Arial, sans-serif;
+    }
+
+    .fraction-input.small {
+      width: 90px;
+      height: 45px;
+      font-size: 18px;
+    }
+
+    .fraction-input:focus {
+      outline: none;
+      border-color: #059669;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3);
+    }
+
+    .fraction-line {
+      width: 100px;
+      height: 4px;
+      background: #2D3748;
+      margin: 5px 0;
+    }
+
+    .fraction-line.small {
+      width: 80px;
+    }
+
+    .input-hint {
+      font-size: 14px;
+      color: #6B7280;
+      margin-top: 8px;
+    }
+
+    .btn-check-answer {
+      background: #10B981;
+      color: white;
+      border: 3px solid #065F46;
+      margin-top: 15px;
+      font-size: 18px;
+      padding: 14px 28px;
+    }
+
+    .btn-check-answer:hover {
+      background: #059669;
+    }
+
+    .btn-check-answer:active {
+      box-shadow: 0 2px 0 #065F46;
+      transform: translateY(2px);
+    }
+
+    .message-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.6);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      animation: fadeIn 0.3s;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .message-box {
+      background: white;
+      border-radius: 16px;
+      padding: 40px;
+      max-width: 500px;
+      text-align: center;
+      box-shadow: 0 10px 0 rgba(0,0,0,0.3), 0 12px 40px rgba(0,0,0,0.4);
+      animation: slideUp 0.3s;
+      border: 6px solid #FFD700;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(30px) scale(0.9); opacity: 0; }
+      to { transform: translateY(0) scale(1); opacity: 1; }
+    }
+
+    .message-box.correct {
+      border-color: #10B981;
+    }
+
+    .message-box.incorrect {
+      border-color: #EF4444;
+    }
+
+    .message-icon {
+      font-size: 72px;
+      margin-bottom: 16px;
+      animation: iconPop 0.5s ease-out;
+    }
+
+    @keyframes iconPop {
+      0% { transform: scale(0); }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+
+    .message-title {
+      font-size: 28px;
+      font-weight: bold;
+      margin-bottom: 16px;
+    }
+
+    .message-box.correct .message-title {
+      color: #10B981;
+    }
+
+    .message-box.incorrect .message-title {
+      color: #EF4444;
+    }
+
+    .message-content {
+      font-size: 18px;
+      color: #4A5568;
+      line-height: 1.8;
+    }
+
+    @media (max-width: 768px) {
+      .game-title {
+        font-size: 24px;
+      }
+      
+      .problem-text {
+        font-size: 18px;
+      }
+      
+      .numberline {
+        max-width: 100%;
+        height: 200px;
+      }
+      
+      .tick-label {
+        font-size: 11px;
+      }
+      
+      .rabbit {
+        font-size: 46px;
+      }
+      
+      .target-marker {
+        font-size: 32px;
+      }
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+  <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
+ </head>
+ <body>
+  <div class="clouds">
+   <div class="cloud cloud1"></div>
+   <div class="cloud cloud2"></div>
+   <div class="cloud cloud3"></div>
+  </div>
+  <div class="app-container">
+   <div class="header">
+    <h1 class="game-title" id="gameTitle">🐰 토끼 분수 점프 게임</h1><button class="difficulty-toggle-btn" id="difficultyToggleBtn">난이도 UP 버전으로 이동하기</button>
+   </div>
+   <div class="game-info">
+    <div class="info-item">
+     문제 번호: <span id="problemNumber">1</span>
+    </div>
+    <div class="info-item">
+     점수: <span id="score">0</span>점
+    </div>
+   </div>
+   <div class="problem-section">
+    <div class="problem-text" id="problemText"></div>
+    <div class="instruction-text" id="instructionText">
+     아래 버튼으로 토끼를 움직여보세요. 답을 정하면 정답 제출 버튼을 누르세요!
+    </div>
+   </div>
+   <div class="game-stage">
+    <div class="numberline" id="numberline">
+     <div class="stage-instruction" id="stageInstruction"></div>
+     <div class="ground-line"></div>
+     <div class="rabbit" id="rabbit">
+      🐰
+     </div>
+    </div>
+    <div class="brick-pattern"></div>
+    <div class="control-buttons"><button class="game-button btn-backward" id="backwardBtn">⬅️ 뒤로</button> <button class="game-button btn-forward" id="forwardBtn">➡️ 앞으로</button>
+    </div>
+   </div>
+   <div class="answer-input-section" id="answerInputSection">
+    <div class="answer-label">
+     정답을 입력하세요:
+    </div>
+    <div id="normalFractionInput">
+     <div class="fraction-input-container"><input type="number" id="answerInput" class="fraction-input" placeholder="분자" min="0">
+      <div class="fraction-line"></div><input type="number" id="denominatorInput" class="fraction-input" placeholder="분모" min="1">
+     </div>
+    </div>
+    <div id="mixedFractionInput" style="display: none;">
+     <div class="mixed-fraction-container"><input type="number" id="wholeNumberInput" class="fraction-input small" placeholder="자연수" min="0">
+      <div class="fraction-input-container"><input type="number" id="mixedNumeratorInput" class="fraction-input small" placeholder="분자" min="0">
+       <div class="fraction-line small"></div><input type="number" id="mixedDenominatorInput" class="fraction-input small" placeholder="분모" min="1">
+      </div>
+     </div>
+    </div><br><button class="game-button btn-check-answer" id="checkAnswerBtn">✅ 정답 확인</button>
+   </div>
+   <div class="status-section">
+    <div class="status-text">
+     점프 횟수: <span id="jumpCount">0</span>번
+    </div>
+   </div>
+   <div class="button-container"><button class="game-button btn-next" id="nextBtn">다음 문제</button> <button class="game-button btn-reset" id="resetBtn">처음으로</button>
+   </div>
+  </div>
+  <div class="message-overlay" id="messageOverlay">
+   <div class="message-box" id="messageBox">
+    <div class="message-icon" id="messageIcon"></div>
+    <div class="message-title" id="messageTitle"></div>
+    <div class="message-content" id="messageContent"></div>
+   </div>
+  </div>
+  <script>
+    const defaultConfig = {
+      game_title: "🐰 토끼 분수 점프 게임",
+      instruction_text: "아래 버튼으로 토끼를 움직여보세요"
+    };
+
+    let denominator = 5;
+    let numerator1 = 1;
+    let numerator2 = 2;
+    let targetStep = 3;
+    let currentStep = 0;
+    let currentStage = 1;
+    let score = 0;
+    let problemNumber = 1;
+    let isMessageShowing = false;
+    let isJumping = false;
+    let isHardMode = false;
+
+    function createFractionHTML(numerator, denominator) {
+      return `<span class="fraction"><span class="fraction-numerator">${numerator}</span><span class="fraction-denominator">${denominator}</span></span>`;
+    }
+
+    function createMixedFractionHTML(numerator, denominator) {
+      const whole = Math.floor(numerator / denominator);
+      const remainder = numerator % denominator;
+      
+      if (remainder === 0) {
+        return `${whole}`;
+      } else {
+        return `${whole} ${createFractionHTML(remainder, denominator)}`;
+      }
+    }
+
+    function generateProblem() {
+      denominator = Math.floor(Math.random() * 8) + 3;
+      
+      if (isHardMode) {
+        do {
+          numerator1 = Math.floor(Math.random() * (denominator - 1)) + 1;
+          numerator2 = Math.floor(Math.random() * (denominator - 1)) + 1;
+          targetStep = numerator1 + numerator2;
+        } while (targetStep <= denominator);
+      } else {
+        do {
+          numerator1 = Math.floor(Math.random() * (denominator - 1)) + 1;
+          const maxNumerator2 = Math.min(denominator - 1, denominator - numerator1);
+          numerator2 = Math.floor(Math.random() * maxNumerator2) + 1;
+          targetStep = numerator1 + numerator2;
+        } while (targetStep === denominator);
+      }
+      
+      currentStep = 0;
+      currentStage = 1;
+      
+      updateProblemText();
+      drawNumberLine();
+      resetRabbit();
+    }
+
+    function updateProblemText() {
+      const problemText = document.getElementById('problemText');
+      const stageInstruction = document.getElementById('stageInstruction');
+      const answerInputSection = document.getElementById('answerInputSection');
+      
+      const fraction1 = createFractionHTML(numerator1, denominator);
+      const fraction2 = createFractionHTML(numerator2, denominator);
+      
+      problemText.innerHTML = `${fraction1} + ${fraction2} 만큼 토끼를 움직이세요.<br>(※${fraction1} + ${fraction2}를 구하세요.)`;
+      
+      if (currentStage === 1) {
+        stageInstruction.innerHTML = `먼저 ${fraction1} 만큼 이동하세요`;
+        answerInputSection.classList.remove('show');
+      } else if (currentStage === 2) {
+        stageInstruction.innerHTML = `다음으로 ${fraction2} 만큼 더 이동하세요`;
+        answerInputSection.classList.remove('show');
+      } else {
+        stageInstruction.innerHTML = `토끼가 정답 만큼 이동했다면 정답을 입력하세요`;
+        answerInputSection.classList.add('show');
+      }
+    }
+
+    function drawNumberLine() {
+      const numberline = document.getElementById('numberline');
+      
+      const existingTicks = numberline.querySelectorAll('.tick, .tick-label, .target-marker');
+      existingTicks.forEach(el => el.remove());
+      
+      const width = numberline.offsetWidth || 700;
+      const maxValue = isHardMode ? (denominator * 2) : denominator;
+      const stepWidth = width / maxValue;
+      
+      for (let i = 0; i <= maxValue; i++) {
+        const tick = document.createElement('div');
+        tick.className = 'tick';
+        tick.style.left = `${i * stepWidth}px`;
+        numberline.appendChild(tick);
+        
+        const label = document.createElement('div');
+        label.className = 'tick-label';
+        label.style.left = `${i * stepWidth}px`;
+        
+        if (i % denominator === 0) {
+          label.textContent = (i / denominator).toString();
+        } else {
+          label.innerHTML = createFractionHTML(i % denominator, denominator);
+        }
+        
+        numberline.appendChild(label);
+      }
+      
+      if (currentStage === 1) {
+        const targetMarker = document.createElement('div');
+        targetMarker.className = 'target-marker';
+        targetMarker.textContent = '🎯';
+        targetMarker.style.left = `${numerator1 * stepWidth}px`;
+        numberline.appendChild(targetMarker);
+      }
+    }
+
+    function updateTargetMarker() {
+      const numberline = document.getElementById('numberline');
+      const existingMarker = numberline.querySelector('.target-marker');
+      
+      if (existingMarker) {
+        existingMarker.remove();
+      }
+      
+      if (currentStage === 1) {
+        const width = numberline.offsetWidth || 700;
+        const maxValue = isHardMode ? (denominator * 2) : denominator;
+        const stepWidth = width / maxValue;
+        
+        const targetMarker = document.createElement('div');
+        targetMarker.className = 'target-marker';
+        targetMarker.textContent = '🎯';
+        targetMarker.style.left = `${numerator1 * stepWidth}px`;
+        numberline.appendChild(targetMarker);
+      }
+    }
+
+    function removeTargetMarker() {
+      const numberline = document.getElementById('numberline');
+      const existingMarker = numberline.querySelector('.target-marker');
+      
+      if (existingMarker) {
+        existingMarker.remove();
+      }
+    }
+
+    function resetRabbit() {
+      currentStep = 0;
+      updateRabbitPosition();
+      updateStatus();
+    }
+
+    function updateRabbitPosition() {
+      const numberline = document.getElementById('numberline');
+      const rabbit = document.getElementById('rabbit');
+      const width = numberline.offsetWidth || 700;
+      const maxValue = isHardMode ? (denominator * 2) : denominator;
+      const stepWidth = width / maxValue;
+      
+      rabbit.style.left = `${currentStep * stepWidth}px`;
+    }
+
+    function updateStatus() {
+      document.getElementById('jumpCount').textContent = currentStep;
+    }
+
+    function playJumpAnimation() {
+      const rabbit = document.getElementById('rabbit');
+      rabbit.classList.add('jumping');
+      setTimeout(() => {
+        rabbit.classList.remove('jumping');
+      }, 500);
+    }
+
+    function moveRabbitOneStep() {
+      if (isMessageShowing || isJumping) return;
+      
+      const maxValue = isHardMode ? (denominator * 2) : denominator;
+      
+      if (currentStep < maxValue) {
+        isJumping = true;
+        playJumpAnimation();
+        
+        setTimeout(() => {
+          currentStep++;
+          updateRabbitPosition();
+          updateStatus();
+          isJumping = false;
+          
+          if (currentStage === 1 && currentStep === numerator1) {
+            setTimeout(() => {
+              currentStage = 2;
+              updateProblemText();
+              removeTargetMarker();
+            }, 600);
+          } else if (currentStage === 2 && currentStep === targetStep) {
+            setTimeout(() => {
+              currentStage = 3;
+              updateProblemText();
+            }, 600);
+          }
+        }, 250);
+      }
+    }
+
+    function moveRabbitBackward() {
+      if (isMessageShowing || isJumping) return;
+      
+      if (currentStep > 0) {
+        isJumping = true;
+        playJumpAnimation();
+        
+        setTimeout(() => {
+          currentStep--;
+          updateRabbitPosition();
+          updateStatus();
+          isJumping = false;
+          
+          if (currentStage === 2 && currentStep < numerator1) {
+            currentStage = 1;
+            updateProblemText();
+            updateTargetMarker();
+          } else if (currentStage === 3 && currentStep < targetStep) {
+            currentStage = 2;
+            updateProblemText();
+          }
+        }, 250);
+      }
+    }
+
+    function checkAnswer() {
+      if (isMessageShowing || isJumping) return;
+      
+      if (currentStage === 1) {
+        if (currentStep === numerator1) {
+          showMessage('correct', 
+            '정답입니다! 🎉', 
+            '잘했어요! 이제 다음 단계로 넘어가요.'
+          );
+          
+          setTimeout(() => {
+            hideMessage();
+            currentStage = 2;
+            updateProblemText();
+            removeTargetMarker();
+          }, 2000);
+        } else {
+          const message = currentStep < numerator1 
+            ? '아쉬워요! 토끼가 너무 적게 점프했어요.' 
+            : '아쉬워요! 토끼가 너무 많이 점프했어요.';
+          
+          const fractionTarget = createFractionHTML(numerator1, denominator);
+          
+          showMessage('incorrect', 
+            message, 
+            `정답 위치는 ${fractionTarget} 이었어요.`
+          );
+        }
+      } else if (currentStage === 2) {
+        if (currentStep === targetStep) {
+          showMessage('correct', 
+            '정답입니다! 🎉', 
+            '잘했어요! 이제 마지막 단계로 넘어가요.'
+          );
+          
+          setTimeout(() => {
+            hideMessage();
+            currentStage = 3;
+            updateProblemText();
+          }, 2000);
+        } else {
+          const message = currentStep < targetStep 
+            ? '아쉬워요! 토끼가 너무 적게 점프했어요.' 
+            : '아쉬워요! 토끼가 너무 많이 점프했어요.';
+          
+          const fractionTarget = createFractionHTML(targetStep, denominator);
+          
+          showMessage('incorrect', 
+            message, 
+            `정답 위치는 ${fractionTarget} 이었어요.`
+          );
+        }
+      } else {
+        if (isHardMode) {
+          const wholeNumberInput = document.getElementById('wholeNumberInput');
+          const mixedNumeratorInput = document.getElementById('mixedNumeratorInput');
+          const mixedDenominatorInput = document.getElementById('mixedDenominatorInput');
+          
+          const userWhole = parseInt(wholeNumberInput.value) || 0;
+          const userNumerator = parseInt(mixedNumeratorInput.value) || 0;
+          const userDenominator = parseInt(mixedDenominatorInput.value);
+          
+          if (isNaN(userDenominator) || userDenominator === 0) {
+            showMessage('incorrect', 
+              '입력 오류', 
+              '분모를 올바르게 입력해주세요.'
+            );
+            return;
+          }
+          
+          const userImproperNumerator = userWhole * userDenominator + userNumerator;
+          
+          if (userImproperNumerator === targetStep && userDenominator === denominator) {
+            const fraction1 = createFractionHTML(numerator1, denominator);
+            const fraction2 = createFractionHTML(numerator2, denominator);
+            const mixedResult = createMixedFractionHTML(targetStep, denominator);
+            
+            showMessage('correct', 
+              '정답입니다! 🎉', 
+              `${fraction1} + ${fraction2} = ${mixedResult} 이에요.`
+            );
+            score++;
+            document.getElementById('score').textContent = score;
+            
+            setTimeout(() => {
+              hideMessage();
+              problemNumber++;
+              document.getElementById('problemNumber').textContent = problemNumber;
+              currentStage = 1;
+              wholeNumberInput.value = '';
+              mixedNumeratorInput.value = '';
+              mixedDenominatorInput.value = '';
+              generateProblem();
+            }, 2500);
+          } else {
+            const mixedTarget = createMixedFractionHTML(targetStep, denominator);
+            
+            showMessage('incorrect', 
+              '아쉬워요!', 
+              `정답은 ${mixedTarget} 이었어요.`
+            );
+          }
+        } else {
+          const answerInput = document.getElementById('answerInput');
+          const denominatorInput = document.getElementById('denominatorInput');
+          
+          const userNumerator = parseInt(answerInput.value);
+          const userDenominator = parseInt(denominatorInput.value);
+          
+          if (isNaN(userNumerator) || isNaN(userDenominator)) {
+            showMessage('incorrect', 
+              '입력 오류', 
+              '분자와 분모를 모두 입력해주세요.'
+            );
+            return;
+          }
+          
+          if (userNumerator === targetStep && userDenominator === denominator) {
+            const fraction1 = createFractionHTML(numerator1, denominator);
+            const fraction2 = createFractionHTML(numerator2, denominator);
+            const fractionResult = createFractionHTML(targetStep, denominator);
+            
+            showMessage('correct', 
+              '정답입니다! 🎉', 
+              `${fraction1} + ${fraction2} = ${fractionResult} 이에요.`
+            );
+            score++;
+            document.getElementById('score').textContent = score;
+            
+            setTimeout(() => {
+              hideMessage();
+              problemNumber++;
+              document.getElementById('problemNumber').textContent = problemNumber;
+              currentStage = 1;
+              answerInput.value = '';
+              denominatorInput.value = '';
+              generateProblem();
+            }, 2500);
+          } else {
+            const fractionTarget = createFractionHTML(targetStep, denominator);
+            
+            showMessage('incorrect', 
+              '아쉬워요!', 
+              `정답은 ${fractionTarget} 이었어요.`
+            );
+          }
+        }
+      }
+    }
+
+    function showMessage(type, title, content) {
+      isMessageShowing = true;
+      
+      const overlay = document.getElementById('messageOverlay');
+      const box = document.getElementById('messageBox');
+      const icon = document.getElementById('messageIcon');
+      const titleEl = document.getElementById('messageTitle');
+      const contentEl = document.getElementById('messageContent');
+      
+      box.className = `message-box ${type}`;
+      icon.textContent = type === 'correct' ? '🌟' : '❌';
+      titleEl.textContent = title;
+      contentEl.innerHTML = content;
+      
+      overlay.style.display = 'flex';
+      
+      if (type === 'incorrect') {
+        setTimeout(() => {
+          const retryBtn = document.createElement('button');
+          retryBtn.className = 'game-button btn-retry';
+          retryBtn.textContent = '다시 시작';
+          retryBtn.style.marginTop = '20px';
+          retryBtn.onclick = () => {
+            hideMessage();
+            resetRabbit();
+            currentStage = 1;
+            document.getElementById('answerInput').value = '';
+            document.getElementById('denominatorInput').value = '';
+            document.getElementById('wholeNumberInput').value = '';
+            document.getElementById('mixedNumeratorInput').value = '';
+            document.getElementById('mixedDenominatorInput').value = '';
+            updateProblemText();
+            drawNumberLine();
+          };
+          
+          if (!box.querySelector('.btn-retry')) {
+            box.appendChild(retryBtn);
+          }
+        }, 100);
+      }
+    }
+
+    function hideMessage() {
+      isMessageShowing = false;
+      const overlay = document.getElementById('messageOverlay');
+      overlay.style.display = 'none';
+      
+      const retryBtn = document.querySelector('.message-box .btn-retry');
+      if (retryBtn) {
+        retryBtn.remove();
+      }
+    }
+
+    document.addEventListener('keydown', (event) => {
+      if (event.code === 'Space') {
+        event.preventDefault();
+        moveRabbitOneStep();
+      } else if (event.code === 'Enter') {
+        event.preventDefault();
+        checkAnswer();
+      } else if (event.code === 'ArrowLeft') {
+        event.preventDefault();
+        moveRabbitBackward();
+      } else if (event.code === 'ArrowRight') {
+        event.preventDefault();
+        moveRabbitOneStep();
+      }
+    });
+
+    document.getElementById('forwardBtn').addEventListener('click', () => {
+      moveRabbitOneStep();
+    });
+
+    document.getElementById('backwardBtn').addEventListener('click', () => {
+      moveRabbitBackward();
+    });
+
+    document.getElementById('checkAnswerBtn').addEventListener('click', () => {
+      checkAnswer();
+    });
+
+    document.getElementById('nextBtn').addEventListener('click', () => {
+      if (isMessageShowing) return;
+      problemNumber++;
+      document.getElementById('problemNumber').textContent = problemNumber;
+      generateProblem();
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      if (isMessageShowing) return;
+      score = 0;
+      problemNumber = 1;
+      document.getElementById('score').textContent = score;
+      document.getElementById('problemNumber').textContent = problemNumber;
+      generateProblem();
+    });
+
+    document.getElementById('difficultyToggleBtn').addEventListener('click', () => {
+      if (isMessageShowing) return;
+      
+      isHardMode = !isHardMode;
+      const btn = document.getElementById('difficultyToggleBtn');
+      const normalInput = document.getElementById('normalFractionInput');
+      const mixedInput = document.getElementById('mixedFractionInput');
+      
+      if (isHardMode) {
+        btn.textContent = '기본 버전으로 이동하기';
+        btn.style.background = '#10B981';
+        btn.style.borderColor = '#065F46';
+        normalInput.style.display = 'none';
+        mixedInput.style.display = 'block';
+      } else {
+        btn.textContent = '난이도 UP 버전으로 이동하기';
+        btn.style.background = '#FF6B6B';
+        btn.style.borderColor = '#C92A2A';
+        normalInput.style.display = 'block';
+        mixedInput.style.display = 'none';
+      }
+      
+      score = 0;
+      problemNumber = 1;
+      document.getElementById('score').textContent = score;
+      document.getElementById('problemNumber').textContent = problemNumber;
+      
+      document.getElementById('answerInput').value = '';
+      document.getElementById('denominatorInput').value = '';
+      document.getElementById('wholeNumberInput').value = '';
+      document.getElementById('mixedNumeratorInput').value = '';
+      document.getElementById('mixedDenominatorInput').value = '';
+      
+      generateProblem();
+    });
+
+    window.addEventListener('resize', () => {
+      drawNumberLine();
+      updateRabbitPosition();
+    });
+
+    async function onConfigChange(config) {
+      const gameTitle = document.getElementById('gameTitle');
+      
+      gameTitle.textContent = config.game_title || defaultConfig.game_title;
+    }
+
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig: defaultConfig,
+        onConfigChange: onConfigChange,
+        mapToCapabilities: (config) => ({
+          recolorables: [],
+          borderables: [],
+          fontEditable: undefined,
+          fontSizeable: undefined
+        }),
+        mapToEditPanelValues: (config) => new Map([
+          ["game_title", config.game_title || defaultConfig.game_title],
+          ["instruction_text", config.instruction_text || defaultConfig.instruction_text]
+        ])
+      });
+    }
+
+    generateProblem();
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9b9ca5f6d55ee9f9',t:'MTc2NzcxNzUzMy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
